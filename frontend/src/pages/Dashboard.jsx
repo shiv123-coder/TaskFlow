@@ -3,23 +3,23 @@ import Navbar from '../components/Navbar';
 import TaskCard from '../components/TaskCard';
 import TaskModal from '../components/TaskModal';
 import api from '../services/api';
+import { useToast } from '../context/ToastContext';
 import {
   Plus,
   Search,
-  Filter,
-  ArrowUpDown,
   CheckCircle,
   Clock,
-  AlertTriangle,
   ListTodo,
   CheckSquare,
-  Sparkles
+  Sparkles,
+  Wifi,
+  Server
 } from 'lucide-react';
 
 const Dashboard = () => {
   const [tasks, setTasks] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
+  const [coldStartNotice, setColdStartNotice] = useState(false);
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [priorityFilter, setPriorityFilter] = useState('all');
@@ -29,18 +29,27 @@ const Dashboard = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [taskToEdit, setTaskToEdit] = useState(null);
 
-  // Fetch tasks from API
+  const { showToast } = useToast();
+
+  // Fetch tasks from API with cold-start detection
   const fetchTasks = async () => {
+    const timer = setTimeout(() => {
+      setColdStartNotice(true);
+    }, 2200);
+
     try {
       setLoading(true);
-      setError('');
       const res = await api.get('/tasks');
+      clearTimeout(timer);
+      setColdStartNotice(false);
       if (res.data.success) {
         setTasks(res.data.data);
       }
     } catch (err) {
+      clearTimeout(timer);
+      setColdStartNotice(false);
       console.error('Error fetching tasks:', err);
-      setError('Failed to load tasks. Please try again.');
+      showToast('Failed to load tasks from server', 'error');
     } finally {
       setLoading(false);
     }
@@ -59,42 +68,49 @@ const Dashboard = () => {
         setTasks((prev) =>
           prev.map((t) => (t._id === taskToEdit._id ? res.data.data : t))
         );
+        showToast('Task updated successfully', 'success');
       }
     } else {
       // Create
       const res = await api.post('/tasks', formData);
       if (res.data.success) {
         setTasks((prev) => [res.data.data, ...prev]);
+        showToast('Task created successfully', 'success');
       }
     }
   };
 
-  // Handle Status Toggle
+  // Handle Status Toggle with optimistic UI
   const handleToggleStatus = async (task) => {
     const newStatus = task.status === 'completed' ? 'pending' : 'completed';
-    // Optimistic UI update
     setTasks((prev) =>
       prev.map((t) => (t._id === task._id ? { ...t, status: newStatus } : t))
+    );
+
+    showToast(
+      newStatus === 'completed' ? 'Task marked as completed' : 'Task marked as pending',
+      'info'
     );
 
     try {
       await api.put(`/tasks/${task._id}`, { status: newStatus });
     } catch (err) {
       console.error('Failed to toggle status:', err);
-      // Revert if error
+      showToast('Failed to update status on server', 'error');
       fetchTasks();
     }
   };
 
-  // Handle Delete
+  // Handle Delete with optimistic UI
   const handleDeleteTask = async (id) => {
     if (window.confirm('Are you sure you want to delete this task?')) {
-      // Optimistic delete
       setTasks((prev) => prev.filter((t) => t._id !== id));
+      showToast('Task deleted', 'info');
       try {
         await api.delete(`/tasks/${id}`);
       } catch (err) {
         console.error('Failed to delete task:', err);
+        showToast('Failed to delete task on server', 'error');
         fetchTasks();
       }
     }
@@ -121,26 +137,18 @@ const Dashboard = () => {
   const filteredTasks = useMemo(() => {
     return tasks
       .filter((task) => {
-        // Search filter
         const matchesSearch =
           task.title.toLowerCase().includes(search.toLowerCase()) ||
           (task.description && task.description.toLowerCase().includes(search.toLowerCase()));
 
-        // Status filter
         const matchesStatus = statusFilter === 'all' || task.status === statusFilter;
-
-        // Priority filter
         const matchesPriority = priorityFilter === 'all' || task.priority === priorityFilter;
 
         return matchesSearch && matchesStatus && matchesPriority;
       })
       .sort((a, b) => {
-        if (sortBy === 'newest') {
-          return new Date(b.createdAt) - new Date(a.createdAt);
-        }
-        if (sortBy === 'oldest') {
-          return new Date(a.createdAt) - new Date(b.createdAt);
-        }
+        if (sortBy === 'newest') return new Date(b.createdAt) - new Date(a.createdAt);
+        if (sortBy === 'oldest') return new Date(a.createdAt) - new Date(b.createdAt);
         if (sortBy === 'dueDate_asc') {
           if (!a.dueDate) return 1;
           if (!b.dueDate) return -1;
@@ -160,6 +168,23 @@ const Dashboard = () => {
       <Navbar />
 
       <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Render Free Tier Cold-Start Banner */}
+        {coldStartNotice && (
+          <div className="mb-6 p-4 rounded-2xl bg-indigo-50/90 border border-indigo-200/80 flex items-center justify-between gap-3 shadow-sm animate-pulse">
+            <div className="flex items-center gap-3 text-indigo-900 text-xs sm:text-sm font-medium">
+              <div className="w-8 h-8 rounded-xl bg-indigo-600 text-white flex items-center justify-center flex-shrink-0">
+                <Server className="w-4 h-4 animate-spin" />
+              </div>
+              <div>
+                <p className="font-bold">Connecting to Cloud Backend...</p>
+                <p className="text-indigo-700/80 text-xs">
+                  Render free tier instances spin down after inactivity. Please allow 30–45s for the initial wake-up.
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Top Header & New Task button */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-6 border-b border-slate-200">
           <div>
@@ -326,21 +351,26 @@ const Dashboard = () => {
           </div>
         </div>
 
-        {/* Task Cards Grid */}
+        {/* Task Cards Grid with Enhanced Skeleton Loaders */}
         <div className="mt-6">
           {loading ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {[1, 2, 3, 4, 5, 6].map((i) => (
                 <div
                   key={i}
-                  className="bg-white rounded-xl p-5 border border-slate-200 animate-pulse space-y-3"
+                  className="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm relative overflow-hidden"
                 >
-                  <div className="h-4 bg-slate-200 rounded w-3/4"></div>
-                  <div className="h-3 bg-slate-100 rounded w-full"></div>
-                  <div className="h-3 bg-slate-100 rounded w-1/2"></div>
-                  <div className="pt-3 flex gap-2">
-                    <div className="h-5 bg-slate-200 rounded-full w-16"></div>
-                    <div className="h-5 bg-slate-200 rounded-full w-20"></div>
+                  <div className="animate-pulse space-y-3.5">
+                    <div className="flex items-center gap-3">
+                      <div className="w-5 h-5 rounded-full bg-slate-200"></div>
+                      <div className="h-4 bg-slate-200 rounded-md w-3/4"></div>
+                    </div>
+                    <div className="h-3 bg-slate-100 rounded-md w-full"></div>
+                    <div className="h-3 bg-slate-100 rounded-md w-2/3"></div>
+                    <div className="pt-3 border-t border-slate-100 flex gap-2">
+                      <div className="h-5 bg-slate-200 rounded-full w-20"></div>
+                      <div className="h-5 bg-slate-200 rounded-full w-24"></div>
+                    </div>
                   </div>
                 </div>
               ))}
@@ -392,4 +422,3 @@ const Dashboard = () => {
 };
 
 export default Dashboard;
-

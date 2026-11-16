@@ -18,6 +18,19 @@ const app = express();
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
+// Enable ETag for HTTP caching & 304 Not Modified support
+app.set('etag', 'strong');
+
+// Lightweight request logging & timing header
+app.use((req, res, next) => {
+  const start = Date.now();
+  res.on('finish', () => {
+    const duration = Date.now() - start;
+    res.setHeader('X-Response-Time', `${duration}ms`);
+  });
+  next();
+});
+
 // CORS Middleware
 const allowedOrigins = [
   'http://localhost:5173',
@@ -28,12 +41,11 @@ const allowedOrigins = [
 app.use(
   cors({
     origin: function (origin, callback) {
-      // Allow requests with no origin (e.g. mobile apps, curl, Postman)
       if (!origin) return callback(null, true);
       if (allowedOrigins.indexOf(origin) !== -1 || process.env.NODE_ENV !== 'production') {
         return callback(null, true);
       }
-      return callback(null, true); // Allow all for public API deployment test
+      return callback(null, true);
     },
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
@@ -41,20 +53,21 @@ app.use(
   })
 );
 
-// Health Check Route
+// Health Check Route (Fast 200 for Render / Uptime monitors)
 app.get('/api/health', (req, res) => {
   res.status(200).json({
     status: 'ok',
-    message: 'Task Manager API is healthy and operational',
+    service: 'TaskFlow API',
     timestamp: new Date().toISOString(),
-    uptime: process.uptime()
+    uptime: Math.round(process.uptime()),
+    memoryUsage: Math.round(process.memoryUsage().heapUsed / 1024 / 1024) + ' MB'
   });
 });
 
 // Root Route
 app.get('/', (req, res) => {
   res.status(200).json({
-    message: 'Welcome to Pluto Academy MERN Internship - Project 01 Task Manager API',
+    message: 'Welcome to TaskFlow REST API | Pluto Academy Capstone',
     endpoints: {
       health: '/api/health',
       auth: {
@@ -84,8 +97,7 @@ app.use(errorHandler);
 const PORT = process.env.PORT || 5000;
 
 const server = app.listen(PORT, () => {
-  console.log(`[Server] Running in ${process.env.NODE_ENV || 'development'} mode on port ${PORT}`);
+  console.log(`[Server] TaskFlow running in ${process.env.NODE_ENV || 'development'} mode on port ${PORT}`);
 });
 
-module.exports = app;
-
+module.exports = server;
