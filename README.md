@@ -3,7 +3,7 @@
 > **Pluto Academy MERN Stack Internship — Project 01**  
 > Built by **Shivshankar Dhareppa Mali**  
 > Candidate Offer Reference: `PA-OL-MS-2026-0237`  
-> GitHub Repository: [https://github.com/shiv123-coder/pluto-task-manager-mern](https://github.com/shiv123-coder/pluto-task-manager-mern)
+> GitHub Repository: [https://github.com/shiv123-coder/TaskFlow](https://github.com/shiv123-coder/TaskFlow)
 
 TaskFlow is a production-ready, full-stack Task Management application built using the **MERN** stack (MongoDB, Express.js, React.js, Node.js). It provides secure user authentication with JWT, strict user-level task isolation, dynamic real-time CRUD workflows, customizable priorities, due-date tracking, search, and status filtering.
 
