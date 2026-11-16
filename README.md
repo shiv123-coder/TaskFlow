@@ -2,9 +2,42 @@
 
 > **Pluto Academy MERN Stack Internship — Project 01**  
 > Built by **Shivshankar Dhareppa Mali**  
-> Candidate Offer Reference: `PA-OL-MS-2026-0237`
+> Candidate Offer Reference: `PA-OL-MS-2026-0237`  
+> GitHub Repository: [https://github.com/shiv123-coder/pluto-task-manager-mern](https://github.com/shiv123-coder/pluto-task-manager-mern)
 
 TaskFlow is a production-ready, full-stack Task Management application built using the **MERN** stack (MongoDB, Express.js, React.js, Node.js). It provides secure user authentication with JWT, strict user-level task isolation, dynamic real-time CRUD workflows, customizable priorities, due-date tracking, search, and status filtering.
+
+---
+
+## 📚 Core Concepts & Topics Covered
+
+### 1. Authentication & Security
+- **JWT (JSON Web Tokens):** Stateless authentication with encrypted user payload and expiration.
+- **Bcrypt Hashing:** Salted password hashing with pre-save hooks to prevent cleartext exposure.
+- **Protected Routes Middleware:** Intercepting HTTP requests, verifying Bearer tokens, and attaching the authenticated user context (`req.user`).
+- **Security & Hygiene:** CORS origin controls, custom error sanitization, and strict environment variable separation (`.env`).
+
+### 2. Backend Architecture & RESTful API Design
+- **MVC Architecture:** Structured separation into Config, Models, Controllers, Middleware, and Routes.
+- **Express Router:** Modular endpoint grouping (`/api/auth` and `/api/tasks`).
+- **Data Validation & Sanitization:** Server-side request payload checks, regex email validation, and length boundaries.
+- **Centralized Error Handling:** Custom 404 handler and unified Express error handler supporting Mongoose CastErrors, duplicate key codes (11000), and validation failures.
+
+### 3. Database Modeling & Cloud NoSQL (MongoDB Atlas)
+- **Mongoose ODM:** Explicit schemas with strong type definitions, defaults, and timestamps.
+- **Document Relationships:** Referential integrity linking each `Task` to a specific `User` via ObjectId (`ref: 'User'`).
+- **Query Optimization:** Case-insensitive search with `$regex`, multi-parameter filtering (`status`, `priority`), and compound sorting by due dates or creation timestamps.
+
+### 4. Modern React Frontend (React 19 + Vite)
+- **State Management:** Global `AuthContext` with persistent session recovery via `localStorage`.
+- **Navigation & Routing:** React Router DOM v7 client-side routing with `ProtectedRoute` guards.
+- **HTTP Client Interceptors:** Axios instance with automated Bearer token attachment and automatic 401 redirect handling.
+- **Optimistic UI Updates:** Instant visual state transitions when toggling task completion and deleting items before server round-trips.
+
+### 5. UI/UX Design & Styling
+- **Tailwind CSS v4:** Modern utility styling, responsive grid layouts, and color-coded status/priority badges.
+- **Lucide Icons:** Clean visual cues and iconography.
+- **Interactive States:** Loading skeletons, confirmation dialogs, modal forms, and friendly empty states.
 
 ---
 
@@ -43,7 +76,7 @@ TaskFlow is a production-ready, full-stack Task Management application built usi
 | :--- | :--- |
 | **Frontend** | React.js (Vite), React Router DOM v7, Axios, Tailwind CSS v4, Lucide React |
 | **Backend** | Node.js, Express.js, Mongoose ODM, JSON Web Token (jsonwebtoken), Bcryptjs, CORS, Dotenv |
-| **Database** | MongoDB Atlas / Local MongoDB (9.0.4) |
+| **Database** | MongoDB Atlas Cloud Cluster |
 | **Deployment** | Vercel (Frontend SPA), Render (Backend REST API) |
 
 ---
@@ -54,7 +87,7 @@ TaskFlow is a production-ready, full-stack Task Management application built usi
 project-01-task-manager/
 ├── backend/
 │   ├── config/
-│   │   └── db.js                 # MongoDB connection logic
+│   │   └── db.js                 # MongoDB Atlas connection logic
 │   ├── controllers/
 │   │   ├── authController.js     # User registration, login, and profile
 │   │   └── taskController.js     # Task CRUD with filtering and search
@@ -118,58 +151,21 @@ project-01-task-manager/
 
 ## ⚙️ Local Development Setup
 
-### Prerequisites
-- Node.js (v18+ recommended)
-- MongoDB instance (local service or MongoDB Atlas cluster URI)
-- Git
-
 ### 1. Backend Setup
 ```bash
 cd backend
 npm install
-
-# Create environment configuration
 cp .env.example .env
-```
-
-Configure your `.env` variables:
-```env
-PORT=5000
-NODE_ENV=development
-MONGO_URI=mongodb://localhost:27017/taskmanager_db
-JWT_SECRET=your_jwt_secret_key_here
-CLIENT_URL=http://localhost:5173
-```
-
-Start the backend server:
-```bash
-# Development mode with auto-reload
 npm run dev
-
-# Or standard start
-npm start
 ```
-*Backend runs on `http://localhost:5000`.*
 
 ### 2. Frontend Setup
 ```bash
 cd ../frontend
 npm install
-
-# Create environment configuration
 cp .env.example .env
-```
-
-Ensure `.env` points to your backend:
-```env
-VITE_API_URL=http://localhost:5000/api
-```
-
-Start the frontend Vite development server:
-```bash
 npm run dev
 ```
-*Frontend runs on `http://localhost:5173`.*
 
 ---
 
@@ -177,4 +173,3 @@ npm run dev
 
 > **Biggest Challenge Solved:**  
 > Architecting resilient state synchronization between client-side optimistic UI updates (for immediate status toggling and deletions) and backend Mongoose/JWT operations, while preventing race conditions and unauthorized cross-user data leakage through strict user-bound database queries.
-
