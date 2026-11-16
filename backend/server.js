@@ -67,7 +67,7 @@ app.get('/api/health', (req, res) => {
 // Root Route
 app.get('/', (req, res) => {
   res.status(200).json({
-    message: 'Welcome to TaskFlow REST API | Pluto Academy Capstone',
+    message: 'TaskFlow REST API is running',
     endpoints: {
       health: '/api/health',
       auth: {

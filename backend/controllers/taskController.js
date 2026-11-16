@@ -1,8 +1,5 @@
 const Task = require('../models/Task');
 
-// @desc    Get all tasks for the logged-in user with filtering & search
-// @route   GET /api/tasks
-// @access  Private
 const getTasks = async (req, res, next) => {
   try {
     const { status, priority, search, sortBy } = req.query;
@@ -49,9 +46,6 @@ const getTasks = async (req, res, next) => {
   }
 };
 
-// @desc    Get a single task by ID
-// @route   GET /api/tasks/:id
-// @access  Private
 const getTaskById = async (req, res, next) => {
   try {
     const task = await Task.findById(req.params.id);
@@ -80,9 +74,6 @@ const getTaskById = async (req, res, next) => {
   }
 };
 
-// @desc    Create a new task
-// @route   POST /api/tasks
-// @access  Private
 const createTask = async (req, res, next) => {
   try {
     const { title, description, status, priority, dueDate } = req.body;
@@ -113,9 +104,6 @@ const createTask = async (req, res, next) => {
   }
 };
 
-// @desc    Update an existing task
-// @route   PUT /api/tasks/:id
-// @access  Private
 const updateTask = async (req, res, next) => {
   try {
     let task = await Task.findById(req.params.id);
@@ -155,9 +143,6 @@ const updateTask = async (req, res, next) => {
   }
 };
 
-// @desc    Delete a task
-// @route   DELETE /api/tasks/:id
-// @access  Private
 const deleteTask = async (req, res, next) => {
   try {
     const task = await Task.findById(req.params.id);

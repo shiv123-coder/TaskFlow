@@ -11,8 +11,7 @@ import {
   Clock,
   ListTodo,
   CheckSquare,
-  Sparkles,
-  Wifi,
+  BarChart2,
   Server
 } from 'lucide-react';
 
@@ -31,7 +30,6 @@ const Dashboard = () => {
 
   const { showToast } = useToast();
 
-  // Fetch tasks from API with cold-start detection
   const fetchTasks = async () => {
     const timer = setTimeout(() => {
       setColdStartNotice(true);
@@ -59,10 +57,8 @@ const Dashboard = () => {
     fetchTasks();
   }, []);
 
-  // Handle Save (Create or Edit)
   const handleSaveTask = async (formData) => {
     if (taskToEdit) {
-      // Update
       const res = await api.put(`/tasks/${taskToEdit._id}`, formData);
       if (res.data.success) {
         setTasks((prev) =>
@@ -71,7 +67,6 @@ const Dashboard = () => {
         showToast('Task updated successfully', 'success');
       }
     } else {
-      // Create
       const res = await api.post('/tasks', formData);
       if (res.data.success) {
         setTasks((prev) => [res.data.data, ...prev]);
@@ -80,7 +75,6 @@ const Dashboard = () => {
     }
   };
 
-  // Handle Status Toggle with optimistic UI
   const handleToggleStatus = async (task) => {
     const newStatus = task.status === 'completed' ? 'pending' : 'completed';
     setTasks((prev) =>
@@ -101,9 +95,8 @@ const Dashboard = () => {
     }
   };
 
-  // Handle Delete with optimistic UI
   const handleDeleteTask = async (id) => {
-    if (window.confirm('Are you sure you want to delete this task?')) {
+    if (window.confirm('Delete this task?')) {
       setTasks((prev) => prev.filter((t) => t._id !== id));
       showToast('Task deleted', 'info');
       try {
@@ -126,14 +119,13 @@ const Dashboard = () => {
     setIsModalOpen(true);
   };
 
-  // Stats calculation
+  // Metrics
   const totalTasks = tasks.length;
   const completedTasks = tasks.filter((t) => t.status === 'completed').length;
   const inProgressTasks = tasks.filter((t) => t.status === 'in-progress').length;
   const pendingTasks = tasks.filter((t) => t.status === 'pending').length;
   const completionRate = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;
 
-  // Filtered and Sorted Tasks
   const filteredTasks = useMemo(() => {
     return tasks
       .filter((task) => {
@@ -168,95 +160,74 @@ const Dashboard = () => {
       <Navbar />
 
       <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Render Free Tier Cold-Start Banner */}
+        {/* Cloud Wake-Up Notice */}
         {coldStartNotice && (
-          <div className="mb-6 p-4 rounded-2xl bg-indigo-50/90 border border-indigo-200/80 flex items-center justify-between gap-3 shadow-sm animate-pulse">
-            <div className="flex items-center gap-3 text-indigo-900 text-xs sm:text-sm font-medium">
-              <div className="w-8 h-8 rounded-xl bg-indigo-600 text-white flex items-center justify-center flex-shrink-0">
-                <Server className="w-4 h-4 animate-spin" />
-              </div>
-              <div>
-                <p className="font-bold">Connecting to Cloud Backend...</p>
-                <p className="text-indigo-700/80 text-xs">
-                  Render free tier instances spin down after inactivity. Please allow 30–45s for the initial wake-up.
-                </p>
-              </div>
+          <div className="mb-6 p-4 rounded-xl bg-slate-100 border border-slate-200 flex items-center justify-between gap-3 text-slate-700 text-xs">
+            <div className="flex items-center gap-2.5">
+              <Server className="w-4 h-4 text-slate-500 flex-shrink-0" />
+              <span>
+                Connecting to cloud server. Free-tier instances may require up to 40 seconds on initial wake-up.
+              </span>
             </div>
           </div>
         )}
 
-        {/* Top Header & New Task button */}
+        {/* Header & Primary Action */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-6 border-b border-slate-200">
           <div>
-            <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-slate-900">
-              Task Dashboard
+            <h1 className="text-2xl font-semibold text-slate-900 tracking-tight">
+              Tasks
             </h1>
             <p className="mt-1 text-sm text-slate-500">
-              Manage your tasks, track progress, and boost your daily productivity.
+              Manage your tasks, track deadlines, and update progress.
             </p>
           </div>
 
           <button
             onClick={openCreateModal}
-            className="inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-sm rounded-xl shadow-md shadow-indigo-200 transition-all cursor-pointer self-start sm:self-auto"
+            className="inline-flex items-center justify-center gap-1.5 px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white font-medium text-xs rounded-lg transition-colors cursor-pointer self-start sm:self-auto"
           >
-            <Plus className="w-4 h-4 stroke-[3]" />
-            New Task
+            <Plus className="w-4 h-4 stroke-[2]" />
+            New task
           </button>
         </div>
 
         {/* Stats Row */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mt-6">
-          <div className="bg-white p-5 rounded-xl border border-slate-200/80 shadow-sm">
-            <div className="flex items-center justify-between">
-              <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
-                Total Tasks
-              </span>
-              <div className="w-8 h-8 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center">
-                <ListTodo className="w-4 h-4" />
-              </div>
+          <div className="bg-white p-4 rounded-xl border border-slate-200">
+            <div className="flex items-center justify-between text-xs text-slate-500 font-medium">
+              <span>Total tasks</span>
+              <ListTodo className="w-4 h-4 text-slate-400" />
             </div>
-            <p className="mt-2 text-2xl font-bold text-slate-800">{totalTasks}</p>
+            <p className="mt-2 text-2xl font-semibold text-slate-900 tabular-nums">{totalTasks}</p>
           </div>
 
-          <div className="bg-white p-5 rounded-xl border border-slate-200/80 shadow-sm">
-            <div className="flex items-center justify-between">
-              <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
-                Completed
-              </span>
-              <div className="w-8 h-8 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center">
-                <CheckCircle className="w-4 h-4" />
-              </div>
+          <div className="bg-white p-4 rounded-xl border border-slate-200">
+            <div className="flex items-center justify-between text-xs text-slate-500 font-medium">
+              <span>Completed</span>
+              <CheckCircle className="w-4 h-4 text-emerald-600" />
             </div>
-            <p className="mt-2 text-2xl font-bold text-emerald-700">{completedTasks}</p>
+            <p className="mt-2 text-2xl font-semibold text-slate-900 tabular-nums">{completedTasks}</p>
           </div>
 
-          <div className="bg-white p-5 rounded-xl border border-slate-200/80 shadow-sm">
-            <div className="flex items-center justify-between">
-              <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
-                In Progress
-              </span>
-              <div className="w-8 h-8 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center">
-                <Clock className="w-4 h-4" />
-              </div>
+          <div className="bg-white p-4 rounded-xl border border-slate-200">
+            <div className="flex items-center justify-between text-xs text-slate-500 font-medium">
+              <span>In progress</span>
+              <Clock className="w-4 h-4 text-slate-500" />
             </div>
-            <p className="mt-2 text-2xl font-bold text-blue-700">{inProgressTasks}</p>
+            <p className="mt-2 text-2xl font-semibold text-slate-900 tabular-nums">{inProgressTasks}</p>
           </div>
 
-          <div className="bg-white p-5 rounded-xl border border-slate-200/80 shadow-sm">
-            <div className="flex items-center justify-between">
-              <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
-                Completion
-              </span>
-              <div className="w-8 h-8 rounded-lg bg-violet-50 text-violet-600 flex items-center justify-center">
-                <Sparkles className="w-4 h-4" />
-              </div>
+          <div className="bg-white p-4 rounded-xl border border-slate-200">
+            <div className="flex items-center justify-between text-xs text-slate-500 font-medium">
+              <span>Completion</span>
+              <BarChart2 className="w-4 h-4 text-slate-400" />
             </div>
             <div className="mt-2 flex items-baseline gap-2">
-              <p className="text-2xl font-bold text-slate-800">{completionRate}%</p>
-              <div className="flex-1 bg-slate-100 rounded-full h-2 overflow-hidden">
+              <p className="text-2xl font-semibold text-slate-900 tabular-nums">{completionRate}%</p>
+              <div className="flex-1 bg-slate-100 rounded-full h-1.5 overflow-hidden">
                 <div
-                  className="bg-indigo-600 h-full rounded-full transition-all duration-500"
+                  className="bg-slate-900 h-full rounded-full transition-all duration-300"
                   style={{ width: `${completionRate}%` }}
                 ></div>
               </div>
@@ -265,17 +236,17 @@ const Dashboard = () => {
         </div>
 
         {/* Filter and Search Bar */}
-        <div className="mt-8 bg-white p-4 rounded-xl border border-slate-200/80 shadow-sm space-y-4">
+        <div className="mt-6 bg-white p-4 rounded-xl border border-slate-200 space-y-3">
           <div className="flex flex-col md:flex-row gap-3">
             {/* Search Input */}
             <div className="relative flex-1">
-              <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
               <input
                 type="text"
-                placeholder="Search tasks by title or details..."
+                placeholder="Search tasks..."
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                className="w-full pl-10 pr-4 py-2 text-sm rounded-lg border border-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-600"
+                className="w-full pl-9 pr-3 py-1.5 text-xs rounded-lg border border-slate-200 focus:outline-none focus:border-slate-400 bg-white"
               />
             </div>
 
@@ -284,66 +255,66 @@ const Dashboard = () => {
               <select
                 value={priorityFilter}
                 onChange={(e) => setPriorityFilter(e.target.value)}
-                className="px-3 py-2 text-xs font-medium rounded-lg border border-slate-200 bg-white text-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
+                className="px-2.5 py-1.5 text-xs rounded-lg border border-slate-200 bg-white text-slate-700 focus:outline-none focus:border-slate-400 cursor-pointer"
               >
-                <option value="all">All Priorities</option>
-                <option value="high">High Priority</option>
-                <option value="medium">Medium Priority</option>
-                <option value="low">Low Priority</option>
+                <option value="all">All priorities</option>
+                <option value="high">High priority</option>
+                <option value="medium">Medium priority</option>
+                <option value="low">Low priority</option>
               </select>
 
               {/* Sort By */}
               <select
                 value={sortBy}
                 onChange={(e) => setSortBy(e.target.value)}
-                className="px-3 py-2 text-xs font-medium rounded-lg border border-slate-200 bg-white text-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
+                className="px-2.5 py-1.5 text-xs rounded-lg border border-slate-200 bg-white text-slate-700 focus:outline-none focus:border-slate-400 cursor-pointer"
               >
-                <option value="newest">Newest First</option>
-                <option value="oldest">Oldest First</option>
-                <option value="dueDate_asc">Due Date (Soonest)</option>
-                <option value="dueDate_desc">Due Date (Latest)</option>
+                <option value="newest">Newest first</option>
+                <option value="oldest">Oldest first</option>
+                <option value="dueDate_asc">Due date (earliest)</option>
+                <option value="dueDate_desc">Due date (latest)</option>
               </select>
             </div>
           </div>
 
           {/* Status Tabs */}
-          <div className="flex items-center gap-2 border-t border-slate-100 pt-3 overflow-x-auto text-xs font-medium">
+          <div className="flex items-center gap-1.5 border-t border-slate-100 pt-3 overflow-x-auto text-xs">
             <button
               onClick={() => setStatusFilter('all')}
-              className={`px-3 py-1.5 rounded-lg transition-colors cursor-pointer whitespace-nowrap ${
+              className={`px-3 py-1 rounded-md transition-colors cursor-pointer ${
                 statusFilter === 'all'
-                  ? 'bg-indigo-600 text-white font-semibold'
-                  : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                  ? 'bg-slate-900 text-white font-medium'
+                  : 'text-slate-600 hover:bg-slate-100'
               }`}
             >
               All ({totalTasks})
             </button>
             <button
               onClick={() => setStatusFilter('pending')}
-              className={`px-3 py-1.5 rounded-lg transition-colors cursor-pointer whitespace-nowrap ${
+              className={`px-3 py-1 rounded-md transition-colors cursor-pointer ${
                 statusFilter === 'pending'
-                  ? 'bg-indigo-600 text-white font-semibold'
-                  : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                  ? 'bg-slate-900 text-white font-medium'
+                  : 'text-slate-600 hover:bg-slate-100'
               }`}
             >
               Pending ({pendingTasks})
             </button>
             <button
               onClick={() => setStatusFilter('in-progress')}
-              className={`px-3 py-1.5 rounded-lg transition-colors cursor-pointer whitespace-nowrap ${
+              className={`px-3 py-1 rounded-md transition-colors cursor-pointer ${
                 statusFilter === 'in-progress'
-                  ? 'bg-indigo-600 text-white font-semibold'
-                  : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                  ? 'bg-slate-900 text-white font-medium'
+                  : 'text-slate-600 hover:bg-slate-100'
               }`}
             >
-              In Progress ({inProgressTasks})
+              In progress ({inProgressTasks})
             </button>
             <button
               onClick={() => setStatusFilter('completed')}
-              className={`px-3 py-1.5 rounded-lg transition-colors cursor-pointer whitespace-nowrap ${
+              className={`px-3 py-1 rounded-md transition-colors cursor-pointer ${
                 statusFilter === 'completed'
-                  ? 'bg-indigo-600 text-white font-semibold'
-                  : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                  ? 'bg-slate-900 text-white font-medium'
+                  : 'text-slate-600 hover:bg-slate-100'
               }`}
             >
               Completed ({completedTasks})
@@ -351,47 +322,47 @@ const Dashboard = () => {
           </div>
         </div>
 
-        {/* Task Cards Grid with Enhanced Skeleton Loaders */}
+        {/* Task Cards Grid */}
         <div className="mt-6">
           {loading ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {[1, 2, 3, 4, 5, 6].map((i) => (
                 <div
                   key={i}
-                  className="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm relative overflow-hidden"
+                  className="bg-white rounded-xl p-4 border border-slate-200"
                 >
-                  <div className="animate-pulse space-y-3.5">
+                  <div className="space-y-3">
                     <div className="flex items-center gap-3">
-                      <div className="w-5 h-5 rounded-full bg-slate-200"></div>
-                      <div className="h-4 bg-slate-200 rounded-md w-3/4"></div>
+                      <div className="w-4 h-4 rounded-full bg-slate-200"></div>
+                      <div className="h-4 bg-slate-200 rounded w-2/3"></div>
                     </div>
-                    <div className="h-3 bg-slate-100 rounded-md w-full"></div>
-                    <div className="h-3 bg-slate-100 rounded-md w-2/3"></div>
+                    <div className="h-3 bg-slate-100 rounded w-full"></div>
+                    <div className="h-3 bg-slate-100 rounded w-1/2"></div>
                     <div className="pt-3 border-t border-slate-100 flex gap-2">
-                      <div className="h-5 bg-slate-200 rounded-full w-20"></div>
-                      <div className="h-5 bg-slate-200 rounded-full w-24"></div>
+                      <div className="h-4 bg-slate-100 rounded w-16"></div>
+                      <div className="h-4 bg-slate-100 rounded w-20"></div>
                     </div>
                   </div>
                 </div>
               ))}
             </div>
           ) : filteredTasks.length === 0 ? (
-            <div className="bg-white rounded-2xl border border-slate-200 p-12 text-center max-w-md mx-auto my-8 shadow-sm">
-              <div className="w-14 h-14 bg-indigo-50 text-indigo-600 rounded-2xl flex items-center justify-center mx-auto mb-4">
-                <CheckSquare className="w-7 h-7" />
+            <div className="bg-white rounded-xl border border-slate-200 p-12 text-center max-w-sm mx-auto my-8">
+              <div className="w-10 h-10 bg-slate-100 text-slate-500 rounded-lg flex items-center justify-center mx-auto mb-3">
+                <CheckSquare className="w-5 h-5" />
               </div>
-              <h3 className="text-lg font-bold text-slate-800">No tasks found</h3>
-              <p className="mt-1 text-sm text-slate-500">
+              <h3 className="text-sm font-semibold text-slate-900">No tasks found</h3>
+              <p className="mt-1 text-xs text-slate-500">
                 {search || statusFilter !== 'all' || priorityFilter !== 'all'
-                  ? 'Try adjusting your search query or filters.'
-                  : 'Get started by creating your first task!'}
+                  ? 'Try adjusting your search query or filter options.'
+                  : 'Get started by creating your first task.'}
               </p>
               <button
                 onClick={openCreateModal}
-                className="mt-5 inline-flex items-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-sm rounded-xl shadow-md shadow-indigo-200 transition-colors cursor-pointer"
+                className="mt-4 inline-flex items-center gap-1.5 px-3 py-1.5 bg-slate-900 hover:bg-slate-800 text-white font-medium text-xs rounded-lg transition-colors cursor-pointer"
               >
-                <Plus className="w-4 h-4 stroke-[3]" />
-                Create Task
+                <Plus className="w-3.5 h-3.5" />
+                Create task
               </button>
             </div>
           ) : (
