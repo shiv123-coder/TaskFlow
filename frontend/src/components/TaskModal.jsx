@@ -178,3 +178,4 @@ const TaskModal = ({ isOpen, onClose, onSave, taskToEdit }) => {
 };
 
 export default TaskModal;
+

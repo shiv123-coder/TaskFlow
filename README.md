@@ -177,3 +177,4 @@ npm run dev
 
 > **Biggest Challenge Solved:**  
 > Architecting resilient state synchronization between client-side optimistic UI updates (for immediate status toggling and deletions) and backend Mongoose/JWT operations, while preventing race conditions and unauthorized cross-user data leakage through strict user-bound database queries.
+
